@@ -4,7 +4,6 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Configure multer to handle the incoming PDF file in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -13,13 +12,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // --- EMAIL CONFIGURATION ---
-// Configure your SMTP credentials here (e.g., Gmail App Password, Resend, or SendGrid)
+// Update this with your actual email and App Password
 const transporter = nodemailer.createTransport({
     service: 'gmail', 
     auth: {
-        user: 'your-email@gmail.com',
-        pass: 'your-app-password' 
+        user: 'your-email@gmail.com', 
+        pass: 'your-app-password'     
     }
+});
+
+// Explicit route to ensure Vercel serves the frontend correctly
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // API Endpoint to receive PDF and send email
@@ -33,7 +37,7 @@ app.post('/api/send-invoice', upload.single('invoice'), async (req, res) => {
         }
 
         const mailOptions = {
-            from: '"Desnix Studio" <your-email@gmail.com>',
+            from: '"Desnix Studio" <your-email@gmail.com>', // Update this email too
             to: clientEmail,
             subject: `Invoice from Desnix Studio - ${currency} ${totalAmount}`,
             text: `Dear ${clientName},\n\nPlease find attached the premium invoice for the creative services rendered by Desnix Studio.\n\nThank you for your business.\n\nBest regards,\nDesnix Studio Management`,
@@ -55,6 +59,5 @@ app.post('/api/send-invoice', upload.single('invoice'), async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Desnix Studio Tool running smoothly on http://localhost:${PORT}`);
-});
+// Export the app for Vercel's serverless environment
+module.exports = app;
